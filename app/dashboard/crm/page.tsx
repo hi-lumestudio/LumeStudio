@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Users } from 'lucide-react'
+import { Search, Users, Download, Loader2, ToggleLeft, ToggleRight } from 'lucide-react'
 import { format } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface CrmEntry {
   id: string
@@ -33,6 +35,7 @@ export default function CrmPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchData() {
@@ -58,11 +61,77 @@ export default function CrmPage() {
     return matchesSearch && matchesStatus
   })
 
+  const exportToCSV = () => {
+    if (filtered.length === 0) {
+      toast.error('No data to export')
+      return
+    }
+
+    // CSV Headers
+    const headers = ['Phone', 'First Contact', 'Last Contact', 'Total Messages', 'Last Message', 'Status']
+    
+    // Format rows
+    const rows = filtered.map(e => [
+      e.customer_phone || '',
+      e.first_contact ? new Date(e.first_contact).toISOString() : '',
+      e.last_contact ? new Date(e.last_contact).toISOString() : '',
+      e.total_messages?.toString() || '0',
+      `"${(e.last_message || '').replace(/"/g, '""')}"`, // Escape quotes
+      e.status || ''
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n')
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `crm_export_${format(new Date(), 'yyyy-MM-dd')}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    toast.success('Successfully exported CRM data')
+  }
+
+  const toggleCustomerStatus = async (id: string, currentStatus: string) => {
+    setUpdatingId(id)
+    const newStatus = currentStatus.toLowerCase() === 'active' ? 'inactive' : 'active'
+    
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('crm')
+      .update({ status: newStatus })
+      .eq('id', id)
+
+    if (error) {
+      toast.error('Failed to update status')
+      setUpdatingId(null)
+      return
+    }
+
+    // Update local state
+    setEntries(entries.map(e => e.id === id ? { ...e, status: newStatus } : e))
+    toast.success(`Customer marked as ${newStatus}`)
+    setUpdatingId(null)
+  }
+
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">CRM</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Manage and track your customers</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">CRM</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage and track your customers</p>
+        </div>
+        <Button onClick={exportToCSV} variant="outline" className="shrink-0" disabled={loading || filtered.length === 0}>
+          <Download className="w-4 h-4 mr-2" />
+          Export CSV
+        </Button>
       </div>
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">
@@ -125,9 +194,26 @@ export default function CrmPage() {
                     <p className="truncate">{entry.last_message || '—'}</p>
                   </td>
                   <td className="px-4 py-3.5">
-                    {entry.status ? (
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${getStatusStyle(entry.status)}`}>{entry.status}</span>
-                    ) : <span className="text-gray-400 text-xs">—</span>}
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${getStatusStyle(entry.status)}`}>
+                        {entry.status || '—'}
+                      </span>
+                      {updatingId === entry.id ? (
+                        <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                      ) : (
+                        <button
+                          onClick={() => toggleCustomerStatus(entry.id, entry.status || 'inactive')}
+                          className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                          title={`Toggle to ${(entry.status || 'inactive').toLowerCase() === 'active' ? 'inactive' : 'active'}`}
+                        >
+                          {(entry.status || 'inactive').toLowerCase() === 'active' ? (
+                            <ToggleRight className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <ToggleLeft className="w-5 h-5" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -143,3 +229,4 @@ export default function CrmPage() {
     </div>
   )
 }
+

@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Leaf,
+  Wallet,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/dashboard/conversations', label: 'Conversations', icon: MessageCircle, exact: false },
   { href: '/dashboard/crm', label: 'CRM', icon: Users, exact: false },
   { href: '/dashboard/orders', label: 'Orders', icon: ShoppingBag, exact: false },
+  { href: '/dashboard/costs', label: 'Costs', icon: Wallet, exact: false },
   { href: '/dashboard/business-data', label: 'Business Data', icon: Database, exact: false },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings, exact: false },
 ]

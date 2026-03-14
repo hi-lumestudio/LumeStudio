@@ -14,6 +14,9 @@ import {
   ChevronRight,
   Sparkles,
   Crown,
+  ShieldCheck,
+  AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react'
 
 const stats = [
@@ -123,8 +126,50 @@ const plans = [
   },
 ]
 
-// ...existing code...
-// Testimonials removed for honesty. If you have real feedback, add here later.
+const businessTypes = [
+  {
+    title: 'F&B & Kafe',
+    desc: 'Order masuk via WhatsApp, butuh respons cepat dan status pesanan yang rapi.',
+  },
+  {
+    title: 'Klinik & Beauty',
+    desc: 'Banyak pertanyaan berulang tentang jadwal, treatment, dan harga.',
+  },
+  {
+    title: 'Retail & Toko Online',
+    desc: 'Butuh follow-up lead, katalog produk, dan rekap pelanggan dalam satu tempat.',
+  },
+  {
+    title: 'Jasa Lokal',
+    desc: 'Cocok untuk bisnis jasa yang ingin respons konsisten tanpa tambah admin baru.',
+  },
+]
+
+const realityPoints = [
+  'Onboarding dilakukan manual, dipandu langsung via WhatsApp atau tatap muka.',
+  'Workflow n8n disesuaikan per bisnis, bukan template asal tempel.',
+  'AI dilatih dari materi bisnis Anda: FAQ, katalog, SOP, dan gaya bahasa brand.',
+  'Go-live bertahap: mulai dari use case sederhana lalu ditingkatkan sesuai kebutuhan.',
+]
+
+const faqItems = [
+  {
+    q: 'Apakah ini langsung jadi tanpa setup?',
+    a: 'Tidak. Setup dilakukan bersama agar sesuai kebutuhan bisnis Anda. Kami bantu dari awal sampai siap pakai.',
+  },
+  {
+    q: 'Apakah bisa custom untuk bisnis saya?',
+    a: 'Bisa. Alur chat, jenis pertanyaan, format order, sampai gaya jawaban AI bisa disesuaikan.',
+  },
+  {
+    q: 'Apakah data saya aman?',
+    a: 'Data disimpan di Supabase dan akses dashboard membutuhkan login. Kami juga mendorong penggunaan RLS untuk membatasi akses data per tenant.',
+  },
+  {
+    q: 'Kalau belum siap full otomatis, bisa bertahap?',
+    a: 'Bisa. Banyak bisnis mulai dari auto-reply FAQ dulu, lalu tambah otomatisasi order dan CRM setelah tim siap.',
+  },
+]
 
 const chatMessages = [
   { from: 'customer', text: 'Halo! Kue cokelat nya ready hari ini?' },
@@ -147,6 +192,8 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
             <a href="#features" className="hover:text-gray-900 transition-colors">Fitur</a>
             <a href="#how-it-works" className="hover:text-gray-900 transition-colors">Cara Kerja</a>
+            <a href="#security" className="hover:text-gray-900 transition-colors">Keamanan</a>
+            <a href="#faq" className="hover:text-gray-900 transition-colors">FAQ</a>
             <a href="#pricing" className="hover:text-gray-900 transition-colors">Harga</a>
           </div>
           <Link
@@ -182,21 +229,21 @@ export default function LandingPage() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-full px-4 py-1.5 text-sm text-green-400 mb-8">
               <Zap className="w-3.5 h-3.5" />
-              Otomatisasi WhatsApp Berbasis AI
+              Onboarding Dipandu Langsung
             </div>
 
             {/* Headline */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-white mb-6">
-              Bisnis Kamu di{' '}
+              WhatsApp Bisnis Lebih{' '}
               <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
-                Autopilot
+                Rapi & Cepat
               </span>
-              , 24/7
+              {' '}dengan AI
             </h1>
 
             <p className="text-lg sm:text-xl text-gray-400 mb-10 leading-relaxed max-w-2xl mx-auto">
-              Lume Studio adalah asisten AI WhatsApp yang menangani pertanyaan pelanggan, mengelola pesanan,
-              dan mengembangkan bisnis kamu — bahkan saat kamu tidur.
+              Lume Studio membantu bisnis Indonesia membangun sistem WhatsApp AI yang benar-benar dipakai:
+              setup manual, alur custom, dan pendampingan sampai jalan.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -283,9 +330,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <p className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-3">Setup Mudah</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Aktif dan berjalan dalam hitungan menit</h2>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Implementasi nyata, bukan janji instan</h2>
             <p className="text-lg text-gray-500 max-w-xl mx-auto">
-              Tanpa coding. Tanpa setup ribet. Tinggal hubungkan dan biarkan Lume Studio yang mengurus sisanya.
+              Kami kerjakan bersama Anda dari setup sampai go-live supaya sistem benar-benar cocok dengan operasional bisnis.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
@@ -298,6 +345,24 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">{title}</h3>
                 <p className="text-gray-500 leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Real-World Implementation ─── */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-3">Realita Implementasi</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Yang Anda dapatkan saat onboarding</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {realityPoints.map((point) => (
+              <div key={point} className="flex items-start gap-3 bg-white border border-gray-200 rounded-xl p-5">
+                <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <p className="text-gray-700 text-sm leading-relaxed">{point}</p>
               </div>
             ))}
           </div>
@@ -331,6 +396,27 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── Who It's For ─── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-3">Siapa yang Cocok</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Didesain untuk bisnis yang aktif di WhatsApp</h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Fokus kami adalah bisnis yang ingin respons lebih cepat, data pelanggan lebih rapi, dan follow-up lebih konsisten.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {businessTypes.map(({ title, desc }) => (
+              <div key={title} className="rounded-2xl border border-gray-200 p-6 bg-gray-50">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── Aspirational Section ─── */}
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -347,6 +433,12 @@ export default function LandingPage() {
       {/* ─── Pricing ─── */}
       <section id="pricing" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto mb-10 rounded-2xl border border-amber-200 bg-amber-50 p-5 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-amber-800 leading-relaxed">
+              Saat ini kami membuka batch early adopter terbatas agar onboarding tetap intensif dan kualitas implementasi terjaga.
+            </p>
+          </div>
           <div className="text-center mb-16">
             <p className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-3">Harga</p>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Harga Simpel, Tanpa Ribet</h2>
@@ -409,6 +501,57 @@ export default function LandingPage() {
                   <ArrowRight className="w-4 h-4 inline-block ml-2" />
                 </Link>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Security ─── */}
+      <section id="security" className="py-24 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <p className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-3">Data & Keamanan</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Keamanan dibangun sejak awal</h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Kami fokus pada praktik yang realistis: autentikasi login, pemisahan akses dashboard, dan kebijakan data yang jelas.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="rounded-2xl border border-gray-200 p-6">
+              <ShieldCheck className="w-6 h-6 text-green-600 mb-4" />
+              <h3 className="font-semibold text-gray-900 mb-2">Akses Terproteksi</h3>
+              <p className="text-sm text-gray-600">Dashboard memerlukan login, dan route internal dilindungi middleware.</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 p-6">
+              <MessageSquare className="w-6 h-6 text-green-600 mb-4" />
+              <h3 className="font-semibold text-gray-900 mb-2">Data Tetap Milik Anda</h3>
+              <p className="text-sm text-gray-600">Percakapan, order, dan data pelanggan tetap berada dalam database bisnis Anda.</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 p-6">
+              <Users className="w-6 h-6 text-green-600 mb-4" />
+              <h3 className="font-semibold text-gray-900 mb-2">Fokus Single-Business</h3>
+              <p className="text-sm text-gray-600">Saat ini sistem difokuskan untuk satu bisnis per implementasi agar onboarding dan kualitas setup tetap terjaga.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ ─── */}
+      <section id="faq" className="py-24 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-3">FAQ</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Pertanyaan yang sering ditanyakan</h2>
+          </div>
+          <div className="space-y-4">
+            {faqItems.map(({ q, a }) => (
+              <details key={q} className="group bg-white rounded-xl border border-gray-200 p-5">
+                <summary className="cursor-pointer list-none font-semibold text-gray-900 flex items-center justify-between gap-4">
+                  {q}
+                  <span className="text-gray-400 group-open:rotate-45 transition-transform">+</span>
+                </summary>
+                <p className="mt-3 text-sm text-gray-600 leading-relaxed">{a}</p>
+              </details>
             ))}
           </div>
         </div>

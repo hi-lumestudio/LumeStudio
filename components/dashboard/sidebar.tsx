@@ -12,7 +12,6 @@ import {
   LogOut,
   Menu,
   X,
-  Leaf,
   Wallet,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -53,8 +52,8 @@ function NavContent({
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5 border-b border-gray-200">
-        <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-          <Leaf className="w-5 h-5 text-white" />
+        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+          <img src="/Lume_Studio_Logo.svg" alt="Lume Studio Logo" className="w-8 h-8" />
         </div>
         <div className="min-w-0">
           <div className="font-bold text-gray-900 text-sm leading-tight">Lume Studio</div>
@@ -117,8 +116,8 @@ export function Sidebar({ tenantName, userEmail }: SidebarProps) {
       {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-green-600 rounded-lg flex items-center justify-center">
-            <Leaf className="w-4 h-4 text-white" />
+          <div className="w-7 h-7 flex items-center justify-center">
+            <img src="/Lume_Studio_Logo.svg" alt="Lume Studio Logo" className="w-7 h-7" />
           </div>
           <span className="font-bold text-gray-900">Lume Studio</span>
         </div>

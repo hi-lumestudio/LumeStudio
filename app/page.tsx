@@ -17,10 +17,10 @@ import {
 } from 'lucide-react'
 
 const stats = [
-  { value: '10.000+', label: 'Pesan Ditangani Setiap Hari' },
-  { value: '500+', label: 'Bisnis Mempercayai Kami' },
-  { value: '99,9%', label: 'Uptime Terjamin' },
+  { value: 'Siap Digunakan', label: 'Untuk Bisnis Indonesia' },
+  { value: '24/7', label: 'AI Otomatisasi WhatsApp' },
   { value: '3 menit', label: 'Rata-rata Waktu Setup' },
+  { value: '100% Lokal', label: 'Bahasa Indonesia & Rupiah' },
 ]
 
 const features = [
@@ -71,18 +71,18 @@ const features = [
 const steps = [
   {
     step: '01',
-    title: 'Hubungkan WhatsApp',
-    desc: 'Sambungkan nomor WhatsApp Business kamu dalam waktu kurang dari 3 menit. Tanpa keahlian teknis.',
+    title: 'Konsultasi & Onboarding',
+    desc: 'Kami bantu setup n8n dan WhatsApp Business secara manual, langsung via WhatsApp atau tatap muka. Tidak perlu keahlian teknis.',
   },
   {
     step: '02',
-    title: 'Latih AI Kamu',
-    desc: 'Upload info bisnis, FAQ, dan katalog produk kamu. AI akan mempelajari gaya komunikasi brand kamu.',
+    title: 'Personalisasi AI',
+    desc: 'Semua info bisnis, FAQ, dan katalog produk diinput bersama. AI disesuaikan dengan gaya komunikasi dan kebutuhan bisnis Anda.',
   },
   {
     step: '03',
-    title: 'Go Live & Berkembang',
-    desc: 'Lihat AI kamu menangani pertanyaan, menangkap lead, dan menutup pesanan — secara otomatis.',
+    title: 'Go Live & Customisasi',
+    desc: 'Solusi Lume Studio sepenuhnya dapat dikustomisasi untuk setiap bisnis. Kami dampingi hingga AI siap menangani pelanggan dan pesanan Anda.',
   },
 ]
 
@@ -123,26 +123,8 @@ const plans = [
   },
 ]
 
-const testimonials = [
-  {
-    quote: "Lume Studio memangkas waktu respons kami dari berjam-jam jadi detik. Pelanggan kami suka betapa cepatnya kami membalas.",
-    name: 'Sari Dewi',
-    role: 'Pemilik, Bloom Bakery Jakarta',
-    rating: 5,
-  },
-  {
-    quote: "Kami menangani 3x lebih banyak pesanan tanpa menambah karyawan. AI-nya tahu menu kami lebih baik dari sebagian pegawai!",
-    name: 'Rizal Hasan',
-    role: 'CEO, Warung Mie Bandung',
-    rating: 5,
-  },
-  {
-    quote: "Setup cuma 5 menit. Sekarang saya tenang tidur karena setiap pertanyaan pelanggan langsung dijawab.",
-    name: 'Putri Anggraini',
-    role: 'Founder, Toko Bunga Surabaya',
-    rating: 5,
-  },
-]
+// ...existing code...
+// Testimonials removed for honesty. If you have real feedback, add here later.
 
 const chatMessages = [
   { from: 'customer', text: 'Halo! Kue cokelat nya ready hari ini?' },
@@ -159,9 +141,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-700 rounded-lg flex items-center justify-center shadow-sm">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <img src="/Lume_Studio_Logo.svg" alt="Lume Studio Logo" className="w-8 h-8" />
             <span className="font-bold text-lg text-gray-900 tracking-tight">Lume Studio</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
@@ -351,28 +331,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── Testimonials ─── */}
+      {/* ─── Aspirational Section ─── */}
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-3">Testimoni</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Dipercaya oleh bisnis di seluruh Indonesia</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map(({ quote, name, role, rating }) => (
-              <div key={name} className="bg-gray-50 rounded-2xl p-8 border border-gray-100">
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-gray-700 leading-relaxed mb-6 text-sm">"{quote}"</p>
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm">{name}</p>
-                  <p className="text-gray-500 text-xs">{role}</p>
-                </div>
-              </div>
-            ))}
+            <p className="text-sm font-semibold text-green-600 uppercase tracking-wider mb-3">Siap untuk Bisnis Anda</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Mulai Otomatisasi WhatsApp Sekarang</h2>
+            <p className="text-lg text-gray-500 max-w-xl mx-auto">
+              Lume Studio siap membantu bisnis Indonesia bertransformasi ke era digital. Jadilah yang pertama memanfaatkan AI untuk melayani pelanggan dan mengelola pesanan secara otomatis.
+            </p>
           </div>
         </div>
       </section>
@@ -458,15 +425,10 @@ export default function LandingPage() {
             Siap untuk otomatisasi?
           </div>
           <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
-            Biarkan AI tangani{' '}
-            <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
-              WhatsApp
-            </span>{' '}
-            kamu hari ini
+            Mulai Otomatisasi WhatsApp Bisnis Anda
           </h2>
           <p className="text-lg text-gray-400 mb-10 leading-relaxed">
-            Bergabung dengan ratusan bisnis Indonesia yang sudah menggunakan Lume Studio untuk melayani pelanggan lebih cepat,
-            menangkap lebih banyak pesanan, dan berkembang — di autopilot.
+            Lume Studio siap membantu bisnis Indonesia melayani pelanggan lebih cepat dan efisien. Konsultasi gratis untuk bisnis yang ingin mencoba solusi AI WhatsApp.
           </p>
           <Link
             href="https://wa.me/+6282332821531"
@@ -484,9 +446,7 @@ export default function LandingPage() {
       <footer className="bg-[#050508] text-gray-600 py-10 border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-gradient-to-br from-green-500 to-emerald-700 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-            </div>
+            <img src="/Lume_Studio_Logo.svg" alt="Lume Studio Logo" className="w-7 h-7" />
             <span className="font-semibold text-white text-sm">Lume Studio</span>
           </div>
           <p className="text-xs">© {new Date().getFullYear()} Lume Studio. Hak cipta dilindungi.</p>

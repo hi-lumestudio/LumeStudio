@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { User, KeyRound, Loader2, Check, CreditCard, X, Copy } from 'lucide-react'
+import { User, KeyRound, Loader2, Check, CreditCard, X, Copy, Megaphone } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface UserInfo {
@@ -28,6 +28,11 @@ export default function SettingsPage() {
   // Payment Modal state
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
+  // Watermark toggle state
+  const [showWatermark, setShowWatermark] = useState(true)
+  const [togglingWatermark, setTogglingWatermark] = useState(false)
+  const [tenantPlan, setTenantPlan] = useState('starter')
+
   useEffect(() => {
     async function fetchUser() {
       const supabase = createClient()
@@ -39,7 +44,7 @@ export default function SettingsPage() {
         // Fetch tenant info from new tenants table
         const { data: tenant } = await supabase
           .from('tenants')
-          .select('business_name, plan, ai_limit, subscription_end, status')
+          .select('business_name, plan, ai_limit, subscription_end, status, show_watermark')
           .eq('id', user.id)
           .single()
 
@@ -62,6 +67,8 @@ export default function SettingsPage() {
           aiLimit: tenant?.ai_limit || null,
           subscriptionEndDate: tenant?.subscription_end || null,
         })
+        setShowWatermark(tenant?.show_watermark !== false)
+        setTenantPlan(tenant?.plan || 'starter')
       }
       setLoading(false)
     }
@@ -174,6 +181,55 @@ export default function SettingsPage() {
               ) : null}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Watermark Toggle */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2.5 px-6 py-4 border-b border-gray-100">
+          <Megaphone className="w-5 h-5 text-gray-500" />
+          <h2 className="font-semibold text-gray-900">Watermark</h2>
+        </div>
+        <div className="px-6 py-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900 mb-1">Watermark &quot;Powered by lumestudio.my.id&quot;</p>
+              {tenantPlan === 'pro' ? (
+                <p className="text-xs text-gray-500">Tampilkan atau sembunyikan watermark di setiap pesan AI.</p>
+              ) : (
+                <p className="text-xs text-gray-500">Setiap pesan AI akan menampilkan &quot;Powered by lumestudio.my.id&quot;. Upgrade ke Pro untuk menghilangkan watermark.</p>
+              )}
+            </div>
+            <button
+              onClick={async () => {
+                if (tenantPlan !== 'pro') return
+                setTogglingWatermark(true)
+                const newVal = !showWatermark
+                const supabase = createClient()
+                const { error } = await supabase.from('tenants').update({ show_watermark: newVal }).eq('id', userInfo?.tenantId)
+                if (error) { toast.error('Gagal mengubah pengaturan watermark'); setTogglingWatermark(false); return }
+                setShowWatermark(newVal)
+                toast.success(newVal ? 'Watermark diaktifkan' : 'Watermark dinonaktifkan')
+                setTogglingWatermark(false)
+              }}
+              disabled={tenantPlan !== 'pro' || togglingWatermark}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${tenantPlan !== 'pro' ? 'bg-green-500 opacity-50 cursor-not-allowed' :
+                  showWatermark ? 'bg-green-500 cursor-pointer' : 'bg-gray-300 cursor-pointer'
+                }`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${showWatermark ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+            </button>
+          </div>
+          {tenantPlan !== 'pro' && (
+            <button
+              onClick={() => setIsPaymentModalOpen(true)}
+              className="mt-4 inline-flex items-center gap-2 h-9 px-4 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+            >
+              <CreditCard className="w-4 h-4" />
+              Upgrade ke Pro
+            </button>
+          )}
         </div>
       </div>
 

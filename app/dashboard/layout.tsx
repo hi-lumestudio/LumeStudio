@@ -12,7 +12,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/login')
   }
 
-  const tenantName = user.user_metadata?.tenant_name || 'My Business'
+  // Read tenant name from new tenants table, fallback to user_metadata
+  let tenantName = user.user_metadata?.tenant_name || 'My Business'
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('business_name')
+    .eq('id', user.id)
+    .single()
+  if (tenant?.business_name) tenantName = tenant.business_name
 
   return (
     <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-inter)]">

@@ -1,0 +1,2589 @@
+{
+  "name": "The Little Bean — WA Chatbot (OpenRouter + Supabase )",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "1164b716-7ad3-4041-939d-d256e8965422",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6b0e609e-9cff-4684-b6d6-1d51166988dd",
+      "name": "WAHA Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -3360,
+        288
+      ],
+      "webhookId": "1164b716-7ad3-4041-939d-d256e8965422",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ok",
+        "options": {}
+      },
+      "id": "012eb247-d222-409d-a17d-231ba014003d",
+      "name": "Respond to WAHA",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -3136,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-fromme",
+              "leftValue": "={{ $json.body.payload.fromMe }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cond-hastext",
+              "leftValue": "={{ $json.body.payload.body !== '' || $json.body.payload.hasMedia === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "c8def03d-3096-46d7-92b5-73bf431e91a7",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "message",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6c5da13f-9227-4db6-beb7-c3cabbe111ad",
+      "name": "Filter Valid Messages",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3136,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "customerPhone",
+              "value": "={{ $json.body.payload.from }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "customerMessage",
+              "value": "={{ $json.body.payload.body }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "wahaSession",
+              "value": "default",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "tenantId",
+              "value": "thelittlebean",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "timestamp",
+              "value": "={{ new Date(new Date().getTime() + 7*60*60*1000).toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "dfbb21fe-8d09-4d30-8821-6a7363cedcad",
+              "name": "quotedMessage",
+              "value": "={{ $json.body.payload.quotedMsg?.body || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "dc2811b7-5338-41bd-a593-3574bdf21e68",
+              "name": "messageType",
+              "value": "={{ $json.body.payload.hasMedia ? 'image' : 'text' }}",
+              "type": "string"
+            },
+            {
+              "id": "6a8149f0-a1c4-48bc-b2dc-5b73153f0d63",
+              "name": "imageUrl",
+              "value": "={{ $json.body.payload.media?.url || $json.body.payload._data?.mediaUrl || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4edb5a6b-edb9-4b3d-a1c7-34bc76dcc666",
+      "name": "Extract Message Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2912,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "businessRows",
+        "options": {}
+      },
+      "id": "1152a24f-36f5-4239-8f50-f594cf6c7f47",
+      "name": "Aggregate Business Data",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "customerPhone",
+              "value": "={{ $('Extract Message Data').item.json.customerPhone }}",
+              "type": "string"
+            },
+            {
+              "id": "m2",
+              "name": "customerMessage",
+              "value": "={{ $('Extract Message Data').item.json.customerMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "m3",
+              "name": "wahaSession",
+              "value": "={{ $('Extract Message Data').item.json.wahaSession }}",
+              "type": "string"
+            },
+            {
+              "id": "m4",
+              "name": "tenantId",
+              "value": "={{ $('Extract Message Data').item.json.tenantId }}",
+              "type": "string"
+            },
+            {
+              "id": "m5",
+              "name": "timestamp",
+              "value": "={{ $('Extract Message Data').item.json.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "m6",
+              "name": "chatHistory",
+              "value": "={{ $('Limit Chat History').all().map(i => ({ role: i.json.role, message: i.json.message })) }}",
+              "type": "array"
+            },
+            {
+              "id": "m7",
+              "name": "businessContext",
+              "value": "={{ $('Aggregate Business Data').first().json.businessRows.map(r => r.key + ': ' + r.value).join('\\n') }}",
+              "type": "string"
+            },
+            {
+              "id": "418505da-9cd6-4c08-bcf5-13caa39e2ed9",
+              "name": "orderData",
+              "value": "={{ $('Latest Order Only').first()?.json?.order_summary ? 'Produk: ' + $('Latest Order Only').first().json.order_summary + '\\nStatus: ' + $('Latest Order Only').first().json.status : 'Belum ada pesanan' }}",
+              "type": "string"
+            },
+            {
+              "id": "44328a3f-0921-4620-aa31-91b844c7f7e1",
+              "name": "quotedMessage",
+              "value": "={{ $('Extract Message Data').item.json.quotedMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "fc58bb4e-cb50-4663-a45c-b9a1536e9d3d",
+              "name": "aiPrompt",
+              "value": "={{ $('Load Tenant Config').all().find(r => r.json.key === 'ai_prompt')?.json.value }}",
+              "type": "string"
+            },
+            {
+              "id": "05fac4b2-3c4b-48c9-b9e8-94fe4de33e37",
+              "name": "apiKey",
+              "value": "={{ $('Load Tenant Config').all().find(r => r.json.key === 'openrouter_api_key')?.json.value }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cd8f1e65-e8d9-47b1-96d8-444dc0f3f40d",
+      "name": "Merge All Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.apiKey }}"
+            },
+            {
+              "name": "=Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "=HTTP-Referer",
+              "value": "https://lumestudio.id"
+            },
+            {
+              "name": "=X-Title",
+              "value": "Lume Studio - The Little Bean"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-4o-mini\",\n  \"max_tokens\": 500,\n  \"temperature\": 0.7,\n  \"messages\": {{ (() => { const history = ($json.chatHistory || []).filter(h => h.role && h.message); const quoted = $json.quotedMessage ? '\\n[Pelanggan membalas pesan: \"' + $json.quotedMessage + '\"]' : ''; const orderContext = $json.orderData ? '\\n\\nSTATUS PESANAN TERAKHIR CUSTOMER INI:\\n' + $json.orderData : ''; const systemPrompt = $json.aiPrompt + '\\n\\nKONTEKS BISNIS:\\n' + $json.businessContext + orderContext; const msgs = [{ role: 'system', content: systemPrompt }]; history.forEach(h => msgs.push({ role: h.role, content: h.message })); msgs.push({ role: 'user', content: $json.customerMessage + quoted }); return JSON.stringify(msgs); })() }}\n}",
+        "options": {}
+      },
+      "id": "4d628ff7-9d76-4163-84eb-a70ea60ab17f",
+      "name": "Call OpenRouter AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r1",
+              "name": "=aiReply",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "string"
+            },
+            {
+              "id": "r2",
+              "name": "=customerPhone",
+              "value": "={{ $('Merge All Data').item.json.customerPhone }}",
+              "type": "string"
+            },
+            {
+              "id": "r3",
+              "name": "=wahaSession",
+              "value": "={{ $('Extract Message Data').item.json.wahaSession }}",
+              "type": "string"
+            },
+            {
+              "id": "r4",
+              "name": "=tenantId",
+              "value": "={{ $('Extract Message Data').item.json.tenantId }}",
+              "type": "string"
+            },
+            {
+              "id": "r5",
+              "name": "=customerMessage",
+              "value": "={{ $('Merge All Data').item.json.customerMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "r6",
+              "name": "=timestamp",
+              "value": "={{ $('Merge All Data').item.json.timestamp }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4876ad8f-caf1-44b2-919d-b13df1af9cf0",
+      "name": "Extract AI Reply",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://waha:3000/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "lumestudio123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session",
+              "value": "default"
+            },
+            {
+              "name": "=chatId",
+              "value": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.aiReply.replace(/<BR>/g, '\\n').replace(/\\s*REVENUE[:\\s]*[\\d.,]*/gi, '').trim() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "beaa1016-9efc-492e-bf72-1fdab1fb11b9",
+      "name": "Send Reply to Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "crm-check",
+              "leftValue": "={{ $json.customer_phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "abe0ffc2-ff83-4af2-ae6d-fe94bcda2fc6",
+      "name": "CRM Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "paid-check",
+              "leftValue": "={{ $('Extract AI Reply').item.json.aiReply }}\n",
+              "rightValue": "PESANAN_TERKONFIRMASI",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "65d814e0-f194-4943-8425-4e47769bbd1e",
+      "name": "Order Confirmed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://waha:3000/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "lumestudio123"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session",
+              "value": "default"
+            },
+            {
+              "name": "chatId",
+              "value": "6282332821531@c.us"
+            },
+            {
+              "name": "text",
+              "value": "={{ '🔔 *PESANAN BARU - THE LITTLE BEAN!*\\n\\nDari: +' + $('Extract AI Reply').item.json.customerPhone.replace('@lid', '').replace('@c.us', '') + '\\nWaktu: ' + new Date().toLocaleString('id-ID', {timeZone: 'Asia/Jakarta'}) + ' WIB\\n\\n📦 Detail Pesanan:\\n' + $('Extract AI Reply').item.json.aiReply.replace('PESANAN_TERKONFIRMASI:', '').trim() + '\\n\\nSegera diproses ya kak! 🙏' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f6e46b26-25f4-4a49-922c-66e2746d3ceb",
+      "name": "Notify Owner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1792,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d2d1a390-f104-46df-96f4-85d347a2b1de",
+              "leftValue": "={{ Math.abs(new Date($json.last_message_time).getTime() - new Date($('Extract Message Data').item.json.timestamp).getTime()) }}",
+              "rightValue": 1000,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1792,
+        672
+      ],
+      "id": "f1b80276-8498-43d2-93c3-15ab63e38c0e",
+      "name": "If Check Timestamp"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "chat_history",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "customer_phone",
+              "keyValue": "={{ String($('Extract Message Data').item.json.customerPhone) }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1344,
+        672
+      ],
+      "id": "eec34a38-0f83-4ca4-9e89-569c5e32429b",
+      "name": "Load Chat History",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 500,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "debounce",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "customer_phone",
+              "keyValue": "={{ String($('Extract Message Data').item.json.customerPhone) }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2016,
+        672
+      ],
+      "id": "a37f6252-ebb2-4629-a5cc-13227d98ed53",
+      "name": "Read Debounce",
+      "retryOnFail": true,
+      "alwaysOutputData": true,
+      "maxTries": 2,
+      "waitBetweenTries": 500,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "business_data",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        672
+      ],
+      "id": "d4bff698-9b5b-4970-ba30-8f964e7669cc",
+      "name": "Load Business Data",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 500,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "user"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerMessage.replace(/[\\n\\r]/g, ' ') }}"
+            },
+            {
+              "fieldId": "timestamp",
+              "fieldValue": "={{ $('Extract Message Data').item.json.timestamp }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        576
+      ],
+      "id": "4ecd413f-2db3-4d90-8c40-c5275be9e14c",
+      "name": "Save User Message",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "assistant"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Extract AI Reply').item.json.aiReply.replace(/\\s*REVENUE[:\\s]*[\\d.,]*/gi, '').trim() }}"
+            },
+            {
+              "fieldId": "timestamp",
+              "fieldValue": "={{ new Date(new Date().getTime() + 7*60*60*1000).toISOString() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        768
+      ],
+      "id": "9eaee812-e3d5-4e55-a06c-35695fd1b00c",
+      "name": "Save Assistant Reply",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "crm",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "customer_phone",
+              "keyValue": "={{ String($('Extract Message Data').item.json.customerPhone) }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        960
+      ],
+      "id": "d705494c-314c-42f5-9efd-81003430e8f5",
+      "name": "Check CRM Record",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 500,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "crm",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "first_contact",
+              "fieldValue": "={{ $('Extract Message Data').item.json.timestamp }}"
+            },
+            {
+              "fieldId": "last_contact",
+              "fieldValue": "={{ new Date(new Date().getTime() + 7*60*60*1000).toISOString() }}"
+            },
+            {
+              "fieldId": "total_messages",
+              "fieldValue": "1"
+            },
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerMessage }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "active"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        1056
+      ],
+      "id": "c7033497-438d-4cab-b190-c44c8153a0f0",
+      "name": "Create CRM Record",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "customer_phone",
+              "condition": "eq",
+              "keyValue": "={{ String($('Extract Message Data').item.json.customerPhone) }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_contact",
+              "fieldValue": "={{ new Date(new Date().getTime() + 7*60*60*1000).toISOString() }}"
+            },
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerMessage }}"
+            },
+            {
+              "fieldId": "total_messages",
+              "fieldValue": "={{ ($('Check CRM Record').first().json.total_messages ? parseInt($('Check CRM Record').first().json.total_messages) : 0) + 1 }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        768
+      ],
+      "id": "0d421cd6-b662-4076-9050-3c8f5531c55a",
+      "name": "Update CRM Record",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hxpvwfxmxoxsdmmggsmx.supabase.co/rest/v1/debounce?on_conflict=tenant_id,customer_phone",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_4_zu-QlZlmSpl6JrSwaDYg_SlxNa1RA"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_4_zu-QlZlmSpl6JrSwaDYg_SlxNa1RA"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tenant_id\": \"{{ $('Extract Message Data').item.json.tenantId }}\",\n  \"customer_phone\": \"{{ $('Extract Message Data').item.json.customerPhone }}\",\n  \"last_message_time\": \"{{ $('Extract Message Data').item.json.timestamp }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2464,
+        672
+      ],
+      "id": "5fe6a47d-f128-434d-930d-8edcee2a3f1a",
+      "name": "Write Debouce"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "orders",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "keyName": "customer_phone",
+              "keyValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        672
+      ],
+      "id": "939d7bd3-0996-4908-9911-73880867b2ac",
+      "name": "Load Order Data",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 500,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Sort by timestamp descending, ambil 20 terakhir\nconst sorted = items\n  .filter(i => i.json.role && i.json.message)\n  .sort((a, b) => new Date(b.json.timestamp) - new Date(a.json.timestamp))\n  .slice(0, 10)\n  .reverse();\n\nreturn sorted.length > 0 ? sorted : [{ json: {} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        672
+      ],
+      "id": "7cc7b5b8-c546-4600-9e4c-80425e0428ed",
+      "name": "Limit Chat History"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length === 0 || !items[0].json.id) {\n  return [{ json: { order_summary: null, status: null } }];\n}\n\n// Ambil order paling baru saja\nconst sorted = items.sort((a, b) => \n  new Date(b.json.order_time) - new Date(a.json.order_time)\n);\n\nreturn [sorted[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        672
+      ],
+      "id": "26be7140-1297-4e4e-8f54-7de93fc1a938",
+      "name": "Latest Order Only"
+    },
+    {
+      "parameters": {
+        "amount": 8
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2240,
+        672
+      ],
+      "id": "4213f473-2b5b-40e6-a6b9-5645b215af64",
+      "name": "Wait 8s",
+      "webhookId": "d9a3f55c-0748-4523-9e97-87c3e013984d"
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "=seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1568,
+        672
+      ],
+      "id": "65a4d0ee-63e3-47f0-a19b-7d718f4deb09",
+      "name": "Wait 2s",
+      "webhookId": "86d6c0bc-a96c-40a5-bd71-fb66173bd90c"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "orders",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "customer_phone",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "waiting_payment"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1568,
+        192
+      ],
+      "id": "4bee46f9-4092-4b17-a6af-4faf13f60200",
+      "name": "Get many rows",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 500,
+      "maxTries": 2,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "08f97698-fd75-4a9c-ab88-7a453728879a",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "waiting_payment",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "85324661-5f3c-414a-9e6d-b6cdba630232",
+              "leftValue": "={{ $json.tenant_id }}",
+              "rightValue": "={{ $('Extract Message Data').item.json.tenantId }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1344,
+        192
+      ],
+      "id": "16a14a9e-1a62-49b1-b1d5-73ce8ed98d6c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('Extract Message Data').item.json.wahaSession }}",
+        "chatId": "={{ $('Extract Message Data').item.json.customerPhone }}",
+        "text": "Terima kasih kak, foto sudah kami terima~ 📸 Akan segera kami proses ya kak 🙏😊",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-waha.WAHA",
+      "typeVersion": 202411,
+      "position": [
+        -1120,
+        288
+      ],
+      "id": "4068b0f7-5a50-48a2-9045-7500a4acdee5",
+      "name": "Send a text message",
+      "credentials": {
+        "wahaApi": {
+          "id": "4vZXgOSPnhUFRmpI",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "tenant_config",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        672
+      ],
+      "id": "64140921-06af-4f63-9e4a-220690bd961f",
+      "name": "Load Tenant Config",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "635b620e-af5c-449f-85e5-4178ddedffe8",
+              "leftValue": "={{ $json.messageType }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2688,
+        384
+      ],
+      "id": "e3b7fdc1-4e42-4a9b-9979-b0141e7be0bf",
+      "name": "Image or Text"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Load Config Image').all().find(r => r.json.key === 'openrouter_api_key')?.json.value }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://lumestudio.id"
+            },
+            {
+              "name": "X-Title",
+              "value": "=Lume Studio - {{ $('Extract Message Data').item.json.tenantId }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-4o-mini\",\n  \"max_tokens\": 300,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"data:{{ $json.mimeType }};base64,{{ $json.imageBase64 }}\"\n          }\n        },\n        {\n          \"type\": \"text\",\n          \"text\": \"Apakah gambar ini adalah bukti transfer pembayaran bank? Jawab hanya dengan YA atau TIDAK.\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -448,
+        96
+      ],
+      "id": "61183291-e796-4cc0-9a4e-1ab280b4b32a",
+      "name": "Open Router Vision"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e813b6f1-2b1e-452f-adc7-b89e79998ffe",
+              "leftValue": "={{ $json.choices[0].message.content.trim().toUpperCase() }}",
+              "rightValue": "YA",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        96
+      ],
+      "id": "746a8ad6-cef0-4bf0-b4e6-83ae174e704b",
+      "name": "If Transfer Proof"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8b0c5716-74d3-4269-9f67-0c778bc6fab8",
+              "leftValue": "={{ $('Extract AI Reply').item.json.aiReply }}",
+              "rightValue": "Fix Order kak",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        384
+      ],
+      "id": "12cec9a6-9535-40fa-a7ff-6d417095983e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "tableId": "orders",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "order_summary",
+              "fieldValue": "={{ $('Extract AI Reply').item.json.aiReply.replace(/\\|?REVENUE[:\\s]*[\\d.,]*/gi, '').split('|').slice(0,5).join(' ') }}"
+            },
+            {
+              "fieldId": "order_time",
+              "fieldValue": "={{ $('Extract Message Data').item.json.timestamp }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "waiting_payment"
+            },
+            {
+              "fieldId": "revenue",
+              "fieldValue": "={{ $('Extract Revenue').item.json.revenue }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        384
+      ],
+      "id": "1575b155-7137-4267-a156-4b9f0c3762de",
+      "name": "Save Waiting Payment",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "orders",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "keyName": "customer_phone",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "waiting_payment"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "confirmed"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        864
+      ],
+      "id": "f5613608-bbf2-4435-91e8-1fd4373da856",
+      "name": "Update Order Confirmed",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "orders",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "keyName": "customer_phone",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "waiting_payment"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "confirmed"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cd455864-0990-4b23-953c-88d7013fa612",
+      "name": "Update Order Status",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 500,
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('Extract Message Data').item.json.wahaSession }}",
+        "chatId": "={{ $('Extract Message Data').item.json.customerPhone }}",
+        "text": "Maaf kak, sepertinya foto yang dikirim bukan bukti transfer~ Bisa kirim ulang bukti transfernya ya kak? 🙏",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        448,
+        192
+      ],
+      "id": "9439dbb2-acd4-45fe-8f70-024c3f79c9c9",
+      "name": "Blm transfer",
+      "credentials": {
+        "wahaApi": {
+          "id": "4vZXgOSPnhUFRmpI",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('Extract Message Data').item.json.wahaSession }}",
+        "chatId": "={{ $('Extract Message Data').item.json.customerPhone }}",
+        "text": "Terima kasih kak! Pembayaran sudah kami terima~ 🙏✨ Pesanan kamu sedang kami proses ya kak 😊",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-waha.WAHA",
+      "typeVersion": 202411,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f2e91659-ec0b-4085-92e5-75d57b5d6ca2",
+      "name": "Sudah Transfer",
+      "credentials": {
+        "wahaApi": {
+          "id": "4vZXgOSPnhUFRmpI",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst binaryKey = Object.keys(item.binary)[0];\nconst base64 = item.binary[binaryKey].data;\nconst mimeType = item.binary[binaryKey].mimeType || 'image/jpeg';\n\nreturn [{ json: { imageBase64: base64, mimeType } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        96
+      ],
+      "id": "934ca4bc-b489-4450-934b-f589ec763ea2",
+      "name": "Convert Image to Base64"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Extract Message Data').item.json.imageUrl.replace('localhost:3000', 'waha:3000') }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "lumestudio123"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -896,
+        96
+      ],
+      "id": "add738bc-39c4-42e9-b4ed-95800dd80815",
+      "name": "Download Image"
+    },
+    {
+      "parameters": {
+        "tableId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "user"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "[Pelanggan mengirim bukti transfer pembayaran]"
+            },
+            {
+              "fieldId": "timestamp",
+              "fieldValue": "={{ $('Extract Message Data').item.json.timestamp }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "5a80aa07-5fbb-45d0-b196-ea7af937e720",
+      "name": "Save Image User Msg",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "assistant"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "Terima kasih kak! Pembayaran sudah kami terima. Pesanan kamu sedang kami proses ya kak."
+            },
+            {
+              "fieldId": "timestamp",
+              "fieldValue": "={{ new Date(new Date().getTime() + 7*60*60*1000).toISOString() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "2d1295b9-bee0-4dc4-91aa-dcbced087231",
+      "name": "Save Image Bot Reply",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "user"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "[Pelanggan mengirim foto - bukan bukti transfer]"
+            },
+            {
+              "fieldId": "timestamp",
+              "fieldValue": "={{ $('Extract Message Data').item.json.timestamp }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        672,
+        192
+      ],
+      "id": "2a35b3ae-a2f3-4dd2-b6d0-2730645c1dd2",
+      "name": "Save Img User NoTransfer",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "assistant"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "Maaf kak, sepertinya foto yang dikirim bukan bukti transfer. Bisa kirim ulang bukti transfernya ya kak?"
+            },
+            {
+              "fieldId": "timestamp",
+              "fieldValue": "={{ new Date(new Date().getTime() + 7*60*60*1000).toISOString() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        192
+      ],
+      "id": "d969645d-b2e1-4f38-855d-e010af7c0d26",
+      "name": "Save Img Bot NoTransfer",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "crm",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "keyName": "customer_phone",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_contact",
+              "fieldValue": "={{ new Date(new Date().getTime() + 7*60*60*1000).toISOString() }}"
+            },
+            {
+              "fieldId": "last_message",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerMessage ? $('Extract Message Data').item.json.customerMessage.substring(0, 100) : '[Foto dikirim via WhatsApp]' }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        96
+      ],
+      "id": "2583d87b-50e7-4f07-8e19-f31d2e23e304",
+      "name": "Update CRM Image",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://waha:3000/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "lumestudio123"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"session\": \"{{ $('Extract Message Data').item.json.wahaSession }}\",\n  \"chatId\": \"6282332821531@c.us\",\n  \"text\": \"🔔 BUKTI TRANSFER MASUK!\\n\\nDari: {{ $('Extract Message Data').item.json.customerPhone }}\\nWaktu: {{ $('Extract Message Data').item.json.timestamp }}\\n\\nOrder status sudah di-update ke CONFIRMED ✅\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "885bafa6-97b5-4809-9937-41bffe6f9deb",
+      "name": "Notify Owner Transfer"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "tenant_config",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "tenant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        96
+      ],
+      "id": "06daca79-f910-4896-b44c-3b46b3a230d1",
+      "name": "Load Config Image",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiReply = $('Extract AI Reply').item.json.aiReply;\n\nconst tagMatch = aiReply.match(/REVENUE[:\\s]*(\\d[\\d.,]*)/i);\nif (tagMatch) {\n  return [{ json: { revenue: parseInt(tagMatch[1].replace(/[.,]/g, '')) } }];\n}\n\nconst parts = aiReply.split('|');\nlet revenue = 0;\nfor (const part of parts) {\n  if (/ongkir|kirim|shipping|total/i.test(part)) continue;\n  const priceMatch = part.match(/Rp\\.?\\s*([\\d.,]+)/i);\n  if (priceMatch) {\n    const price = parseInt(priceMatch[1].replace(/[.,]/g, ''));\n    if (price > 0) revenue += price;\n  }\n}\n\nreturn [{ json: { revenue } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        384
+      ],
+      "id": "d0df5270-2d94-46ac-98e6-96aee6019c0f",
+      "name": "Extract Revenue"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hxpvwfxmxoxsdmmggsmx.supabase.co/rest/v1/debounce?on_conflict=tenant_id,customer_phone",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_4_zu-QlZlmSpl6JrSwaDYg_SlxNa1RA"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_4_zu-QlZlmSpl6JrSwaDYg_SlxNa1RA"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tenant_id\": \"{{ $('Extract Message Data').item.json.tenantId }}\",\n  \"customer_phone\": \"{{ $('Extract Message Data').item.json.customerPhone }}\",\n  \"last_message_time\": \"{{ $('Extract Message Data').item.json.timestamp }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2464,
+        192
+      ],
+      "id": "97fe9625-98ff-4251-b136-7dc8a9bb2770",
+      "name": "Write Debounce Image"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2240,
+        192
+      ],
+      "id": "c555e150-a437-4400-92e7-dc590107dc31",
+      "name": "Wait 3s Image",
+      "webhookId": "wait-3s-img-webhook"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "debounce",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "customer_phone",
+              "keyValue": "={{ String($('Extract Message Data').item.json.customerPhone) }}"
+            },
+            {
+              "keyName": "tenant_id",
+              "keyValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2016,
+        192
+      ],
+      "id": "c7ceece9-e3cf-4fb6-9c70-027371a75808",
+      "name": "Read Debounce Image",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "img-timestamp-check",
+              "leftValue": "={{ Math.abs(new Date($json.last_message_time).getTime() - new Date($('Extract Message Data').item.json.timestamp).getTime()) }}",
+              "rightValue": 1000,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1792,
+        192
+      ],
+      "id": "f9d6c424-0e77-4b4a-a5bc-c6d3b047fcae",
+      "name": "If Check Timestamp Image"
+    },
+    {
+      "parameters": {
+        "tableId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "user"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "[Pelanggan mengirim foto]"
+            },
+            {
+              "fieldId": "timestamp",
+              "fieldValue": "={{ $('Extract Message Data').item.json.timestamp }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        288
+      ],
+      "id": "05785811-8721-441e-8b7c-df6185926462",
+      "name": "Save User Message1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "chat_history",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tenant_id",
+              "fieldValue": "={{ $('Extract Message Data').item.json.tenantId }}"
+            },
+            {
+              "fieldId": "customer_phone",
+              "fieldValue": "={{ $('Extract Message Data').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "role",
+              "fieldValue": "assistant"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "Terima kasih kak, foto sudah kami terima~ 📸 Akan segera kami proses ya kak 🙏😊"
+            },
+            {
+              "fieldId": "timestamp",
+              "fieldValue": "={{ new Date(new Date().getTime() + 7*60*60*1000).toISOString() }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        288
+      ],
+      "id": "5333b54e-5db1-43f9-a4ca-9d4b3a93f193",
+      "name": "Save AI Message",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Eq4fmI7C8A8ujVhT",
+          "name": "Supabase account Service Role Secret"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WAHA Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to WAHA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Valid Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Messages": {
+      "main": [
+        [
+          {
+            "node": "Extract Message Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Message Data": {
+      "main": [
+        [
+          {
+            "node": "Image or Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Business Data": {
+      "main": [
+        [
+          {
+            "node": "Load Tenant Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Data": {
+      "main": [
+        [
+          {
+            "node": "Call OpenRouter AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call OpenRouter AI": {
+      "main": [
+        [
+          {
+            "node": "Extract AI Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract AI Reply": {
+      "main": [
+        [
+          {
+            "node": "Send Reply to Customer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save User Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check CRM Record",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM Exists?": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create CRM Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Confirmed?": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Order Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Check Timestamp": {
+      "main": [
+        [
+          {
+            "node": "Wait 2s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Chat History": {
+      "main": [
+        [
+          {
+            "node": "Limit Chat History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Debounce": {
+      "main": [
+        [
+          {
+            "node": "If Check Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Business Data": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Business Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Reply to Customer": {
+      "main": [
+        [
+          {
+            "node": "Save Assistant Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check CRM Record": {
+      "main": [
+        [
+          {
+            "node": "CRM Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create CRM Record": {
+      "main": [
+        [
+          {
+            "node": "Order Confirmed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update CRM Record": {
+      "main": [
+        [
+          {
+            "node": "Order Confirmed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Debouce": {
+      "main": [
+        [
+          {
+            "node": "Wait 8s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Order Data": {
+      "main": [
+        [
+          {
+            "node": "Latest Order Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit Chat History": {
+      "main": [
+        [
+          {
+            "node": "Load Business Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Latest Order Only": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 8s": {
+      "main": [
+        [
+          {
+            "node": "Read Debounce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2s": {
+      "main": [
+        [
+          {
+            "node": "Load Chat History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Load Config Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Tenant Config": {
+      "main": [
+        [
+          {
+            "node": "Load Order Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image or Text": {
+      "main": [
+        [
+          {
+            "node": "Write Debounce Image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Write Debouce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open Router Vision": {
+      "main": [
+        [
+          {
+            "node": "If Transfer Proof",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Transfer Proof": {
+      "main": [
+        [
+          {
+            "node": "Update Order Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Blm transfer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract Revenue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Order Status": {
+      "main": [
+        [
+          {
+            "node": "Sudah Transfer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Image to Base64": {
+      "main": [
+        [
+          {
+            "node": "Open Router Vision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Convert Image to Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sudah Transfer": {
+      "main": [
+        [
+          {
+            "node": "Save Image User Msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Image User Msg": {
+      "main": [
+        [
+          {
+            "node": "Save Image Bot Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Blm transfer": {
+      "main": [
+        [
+          {
+            "node": "Save Img User NoTransfer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Img User NoTransfer": {
+      "main": [
+        [
+          {
+            "node": "Save Img Bot NoTransfer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Image Bot Reply": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner Transfer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Img Bot NoTransfer": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Owner Transfer": {
+      "main": [
+        [
+          {
+            "node": "Update CRM Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Config Image": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Revenue": {
+      "main": [
+        [
+          {
+            "node": "Save Waiting Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Debounce Image": {
+      "main": [
+        [
+          {
+            "node": "Wait 3s Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3s Image": {
+      "main": [
+        [
+          {
+            "node": "Read Debounce Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Debounce Image": {
+      "main": [
+        [
+          {
+            "node": "If Check Timestamp Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Check Timestamp Image": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Save User Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save User Message1": {
+      "main": [
+        [
+          {
+            "node": "Save AI Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8b31d2b0-868f-472d-abec-8d5c18e18fb6",
+  "meta": {
+    "instanceId": "b247b14701746d8038143903671a326177c22cb9780c81ca81d7f02481294432"
+  },
+  "id": "FGc4OzTZwhiQyknN",
+  "tags": []
+}

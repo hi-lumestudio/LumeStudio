@@ -32,14 +32,14 @@ export default function CostsPage() {
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  
+
   // Form State
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
   const [customCategory, setCustomCategory] = useState('')
   const [description, setDescription] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  
+
   // Filter State
   const [monthFilter, setMonthFilter] = useState('all')
 
@@ -56,11 +56,10 @@ export default function CostsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const tenantId = user.user_metadata?.tenant_id || 'default'
     const { data, error } = await supabase
-      .from('costs')
+      .from('costs_v2')
       .select('*')
-      .eq('tenant_id', tenantId)
+      .eq('tenant_id', user.id)
       .order('date', { ascending: false })
 
     if (error) {
@@ -86,19 +85,19 @@ export default function CostsPage() {
     setIsSubmitting(true)
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    const tenantId = user?.user_metadata?.tenant_id || 'default'
+    if (!user) return
 
     const finalCategory = category === 'Lainnya...' ? customCategory : category
 
     const newCost = {
-      tenant_id: tenantId,
+      tenant_id: user.id,
       amount: Number(amount),
       category: finalCategory,
       description,
       date
     }
 
-    const { error } = await supabase.from('costs').insert([newCost])
+    const { error } = await supabase.from('costs_v2').insert([newCost])
 
     setIsSubmitting(false)
 
@@ -121,7 +120,7 @@ export default function CostsPage() {
     setEditAmount(cost.amount.toString())
     setEditDate(cost.date)
     setEditDescription(cost.description || '')
-    
+
     if (CATEGORIES.includes(cost.category)) {
       setEditCategory(cost.category)
       setEditCustomCategory('')
@@ -152,7 +151,7 @@ export default function CostsPage() {
 
     // Try to update using ID
     const { error } = await supabase
-      .from('costs')
+      .from('costs_v2')
       .update(updates)
       .eq('id', editingCost.id)
 
@@ -170,10 +169,10 @@ export default function CostsPage() {
 
   const handleDeleteCost = async (id: string) => {
     if (!confirm('Apakah Anda yakin ingin menghapus pengeluaran ini?')) return
-    
+
     setDeletingId(id)
     const supabase = createClient()
-    const { error } = await supabase.from('costs').delete().eq('id', id)
+    const { error } = await supabase.from('costs_v2').delete().eq('id', id)
 
     if (error) {
       toast.error('Gagal menghapus pengeluaran')
@@ -204,7 +203,7 @@ export default function CostsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* ADD NEW COST FORM */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 sticky top-6">
@@ -303,7 +302,7 @@ export default function CostsPage() {
                 })}
               </select>
             </div>
-            
+
             <div className="text-right flex-shrink-0">
               <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Pilihan</p>
               <p className="text-xl font-bold text-gray-900">Rp {totalFilteredAmount.toLocaleString('id-ID')}</p>

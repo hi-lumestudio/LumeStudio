@@ -16,12 +16,12 @@ interface Order {
   status: string
 }
 
-const ORDER_STATUSES = ['pending', 'payment confirmed', 'processing', 'shipped', 'completed', 'cancelled']
+const ORDER_STATUSES = ['waiting payment', 'payment confirmed', 'processing', 'shipped', 'completed', 'cancelled']
 
 function getStatusStyle(status: string) {
   const s = status?.toLowerCase()
   if (s === 'completed') return 'bg-green-100 text-green-700'
-  if (s === 'pending') return 'bg-yellow-100 text-yellow-700'
+  if (s === 'waiting payment' || s === 'pending') return 'bg-yellow-100 text-yellow-700'
   if (s === 'payment confirmed') return 'bg-purple-100 text-purple-700'
   if (s === 'processing') return 'bg-blue-100 text-blue-700'
   if (s === 'shipped') return 'bg-indigo-100 text-indigo-700'
@@ -39,7 +39,8 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('all')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
-  
+  const [customerNames, setCustomerNames] = useState<Record<string, string | null>>({})
+
   // Batch Actions State
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([])
   const [batchStatusValue, setBatchStatusValue] = useState('')
@@ -51,12 +52,21 @@ export default function OrdersPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const tenantId = user.user_metadata?.tenant_id || 'default'
       const { data } = await supabase
-        .from('orders')
+        .from('orders_v2')
         .select('*')
-        .eq('tenant_id', tenantId)
-        .order('order_time', { ascending: false })
+        .eq('tenant_id', user.id)
+        .order('created_at', { ascending: false })
+
+      // Fetch customer names
+      const { data: customers } = await supabase
+        .from('customers')
+        .select('phone, name')
+        .eq('tenant_id', user.id)
+
+      const nameMap: Record<string, string | null> = {}
+        ; (customers || []).forEach((c: any) => { if (c.phone) nameMap[c.phone] = c.name })
+      setCustomerNames(nameMap)
 
       setOrders(data || [])
       setLoading(false)
@@ -67,7 +77,7 @@ export default function OrdersPage() {
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId)
     const supabase = createClient()
-    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId)
+    const { error } = await supabase.from('orders_v2').update({ status: newStatus }).eq('id', orderId)
 
     if (error) {
       toast.error('Failed to update order status')
@@ -80,7 +90,7 @@ export default function OrdersPage() {
 
   // --- Batch Actions Helpers ---
   const toggleSelection = (id: string) => {
-    setSelectedOrderIds(prev => 
+    setSelectedOrderIds(prev =>
       prev.includes(id) ? prev.filter(orderId => orderId !== id) : [...prev, id]
     )
   }
@@ -99,20 +109,20 @@ export default function OrdersPage() {
       toast.error('Please select a new status')
       return
     }
-    
+
     setIsBatchUpdating(true)
     const supabase = createClient()
-    
+
     // Supabase '.in' filter makes it easy to update multiple records at once
     const { error } = await supabase
-      .from('orders')
+      .from('orders_v2')
       .update({ status: batchStatusValue })
       .in('id', selectedOrderIds)
 
     if (error) {
       toast.error('Failed to manually update order statuses')
     } else {
-      setOrders(prev => prev.map(o => 
+      setOrders(prev => prev.map(o =>
         selectedOrderIds.includes(o.id) ? { ...o, status: batchStatusValue } : o
       ))
       toast.success(`Successfully updated ${selectedOrderIds.length} orders to ${batchStatusValue}`)
@@ -122,7 +132,11 @@ export default function OrdersPage() {
     setIsBatchUpdating(false)
   }
 
-  const filtered = orders.filter((o) => statusFilter === 'all' || o.status?.toLowerCase() === statusFilter)
+  const filtered = orders.filter((o) => {
+    if (statusFilter === 'all') return true
+    const normalizedStatus = o.status?.toLowerCase() === 'pending' ? 'waiting payment' : o.status?.toLowerCase()
+    return normalizedStatus === statusFilter
+  })
   const isAllSelected = filtered.length > 0 && selectedOrderIds.length === filtered.length
 
   return (
@@ -170,18 +184,18 @@ export default function OrdersPage() {
                 <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
               ))}
             </select>
-            <Button 
-              size="sm" 
-              onClick={handleBatchUpdate} 
+            <Button
+              size="sm"
+              onClick={handleBatchUpdate}
               disabled={isBatchUpdating || !batchStatusValue}
               className="whitespace-nowrap"
             >
               {isBatchUpdating && <Loader2 className="mr-2 w-3 h-3 animate-spin" />}
               Update Orders
             </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => setSelectedOrderIds([])}
               disabled={isBatchUpdating}
             >
@@ -197,8 +211,8 @@ export default function OrdersPage() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="px-4 py-3 w-12 text-center text-xs font-medium text-gray-500">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="rounded border-gray-300 text-green-600 focus:ring-green-600 cursor-pointer w-4 h-4"
                     checked={isAllSelected}
                     onChange={handleSelectAll}
@@ -232,20 +246,23 @@ export default function OrdersPage() {
                 </tr>
               ) : (
                 filtered.map((order) => (
-                  <tr 
-                    key={order.id} 
+                  <tr
+                    key={order.id}
                     className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-green-50/50 hover:bg-green-50' : ''}`}
                   >
                     <td className="px-4 py-3.5 text-center">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="rounded border-gray-300 text-green-600 focus:ring-green-600 cursor-pointer w-4 h-4"
                         checked={selectedOrderIds.includes(order.id)}
                         onChange={() => toggleSelection(order.id)}
                       />
                     </td>
                     <td className="px-4 py-3.5">
-                      <p className="font-medium text-gray-900">{order.customer_phone || '—'}</p>
+                      <p className="font-medium text-gray-900">{customerNames[order.customer_phone] || order.customer_phone || '—'}</p>
+                      {customerNames[order.customer_phone] && (
+                        <p className="text-xs text-gray-400">{order.customer_phone}</p>
+                      )}
                     </td>
                     <td className="px-4 py-3.5 text-gray-600 hidden md:table-cell max-w-xs">
                       <p className="line-clamp-2">{order.order_summary || '—'}</p>
@@ -254,26 +271,25 @@ export default function OrdersPage() {
                       {formatDate(order.order_time)}
                     </td>
                     <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${getStatusStyle(order.status)}`}>
-                          {order.status || 'unknown'}
-                        </span>
-                        <div className="relative">
-                          <select
-                            value={order.status || ''}
-                            onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                            disabled={updatingId === order.id}
-                            className="text-xs h-7 pl-2 pr-6 rounded-md border border-gray-200 bg-white focus:outline-none focus:ring-1 focus:ring-green-600 disabled:opacity-50 cursor-pointer appearance-none"
-                          >
-                            <option value="" disabled>Change...</option>
-                            {ORDER_STATUSES.map((s) => (
-                              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                            ))}
-                          </select>
-                          {updatingId === order.id && (
-                            <Loader2 className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 animate-spin text-gray-400" />
-                          )}
-                        </div>
+                      <div className="relative inline-flex items-center">
+                        <select
+                          value={order.status?.toLowerCase() === 'pending' ? 'waiting payment' : (order.status || '')}
+                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          disabled={updatingId === order.id}
+                          className={`text-xs h-7 pl-3 pr-8 rounded-full font-medium capitalize appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-50 border border-gray-100 ${getStatusStyle(order.status)}`}
+                        >
+                          <option value="" disabled>Select status</option>
+                          {ORDER_STATUSES.map((s) => (
+                            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                          ))}
+                        </select>
+                        {updatingId === order.id ? (
+                          <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin opacity-70" />
+                        ) : (
+                          <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        )}
                       </div>
                     </td>
                   </tr>

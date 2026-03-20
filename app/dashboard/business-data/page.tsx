@@ -6,8 +6,6 @@ import { Database, Pencil, Check, X, Plus, Loader2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface DataEntry {
-  id: string
-  tenant_id: string
   key: string
   value: string
 }
@@ -35,39 +33,44 @@ const DEFAULT_KEYS = [
 export default function BusinessDataPage() {
   const [entries, setEntries] = useState<DataEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingKey, setEditingKey] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [tenantId, setTenantId] = useState('default')
+  const [savingKey, setSavingKey] = useState<string | null>(null)
+  const [deletingKey, setDeletingKey] = useState<string | null>(null)
   const [addingNew, setAddingNew] = useState(false)
   const [newKey, setNewKey] = useState('')
   const [newValue, setNewValue] = useState('')
   const [savingNew, setSavingNew] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchData() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const tid = user.user_metadata?.tenant_id || 'default'
-      setTenantId(tid)
-      const { data } = await supabase
-        .from('business_data')
-        .select('*')
-        .eq('tenant_id', tid)
-        .order('key', { ascending: true })
+      setUserId(user.id)
 
-      // If tenant has no entries yet, seed the default placeholder keys
-      if (!data || data.length === 0) {
-        const rows = DEFAULT_KEYS.map((key) => ({ tenant_id: tid, key, value: '' }))
-        const { data: seeded } = await supabase
-          .from('business_data')
-          .insert(rows)
-          .select()
-        setEntries(seeded || [])
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('knowledge_base')
+        .eq('id', user.id)
+        .single()
+
+      const kb = tenant?.knowledge_base || {}
+
+      // If tenant has no knowledge base yet, seed with default keys
+      if (Object.keys(kb).length === 0) {
+        const defaultKb: Record<string, string> = {}
+        DEFAULT_KEYS.forEach(key => { defaultKb[key] = '' })
+
+        await supabase
+          .from('tenants')
+          .update({ knowledge_base: defaultKb })
+          .eq('id', user.id)
+
+        setEntries(Object.entries(defaultKb).map(([key, value]) => ({ key, value })))
       } else {
-        setEntries(data)
+        setEntries(Object.entries(kb).map(([key, value]) => ({ key, value: value as string })))
       }
 
       setLoading(false)
@@ -75,43 +78,70 @@ export default function BusinessDataPage() {
     fetchData()
   }, [])
 
-  const startEdit = (entry: DataEntry) => { setEditingId(entry.id); setEditValue(entry.value) }
-  const cancelEdit = () => { setEditingId(null); setEditValue('') }
+  const startEdit = (entry: DataEntry) => { setEditingKey(entry.key); setEditValue(entry.value) }
+  const cancelEdit = () => { setEditingKey(null); setEditValue('') }
 
-  const saveEdit = async (id: string) => {
-    setSavingId(id)
+  const saveEdit = async (key: string) => {
+    if (!userId) return
+    setSavingKey(key)
     const supabase = createClient()
-    const { error } = await supabase.from('business_data').update({ value: editValue }).eq('id', id)
+
+    // Build updated knowledge_base with this key changed
+    const currentKb: Record<string, string> = {}
+    entries.forEach(e => { currentKb[e.key] = e.key === key ? editValue : e.value })
+
+    const { error } = await supabase
+      .from('tenants')
+      .update({ knowledge_base: currentKb })
+      .eq('id', userId)
+
     if (error) { toast.error('Failed to save changes') } else {
-      setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, value: editValue } : e)))
+      setEntries(prev => prev.map(e => e.key === key ? { ...e, value: editValue } : e))
       toast.success('Knowledge updated')
       cancelEdit()
     }
-    setSavingId(null)
+    setSavingKey(null)
   }
 
-  const deleteEntry = async (id: string) => {
-    if (!confirm('Delete this knowledge entry?')) return
-    setDeletingId(id)
+  const deleteEntry = async (key: string) => {
+    if (!confirm('Delete this knowledge entry?') || !userId) return
+    setDeletingKey(key)
     const supabase = createClient()
-    const { error } = await supabase.from('business_data').delete().eq('id', id)
+
+    const currentKb: Record<string, string> = {}
+    entries.forEach(e => { if (e.key !== key) currentKb[e.key] = e.value })
+
+    const { error } = await supabase
+      .from('tenants')
+      .update({ knowledge_base: currentKb })
+      .eq('id', userId)
+
     if (error) { toast.error('Failed to delete entry') } else {
-      setEntries((prev) => prev.filter((e) => e.id !== id))
+      setEntries(prev => prev.filter(e => e.key !== key))
       toast.success('Entry deleted')
     }
-    setDeletingId(null)
+    setDeletingKey(null)
   }
 
   const addNewEntry = async () => {
     if (!newKey.trim() || !newValue.trim()) { toast.error('Key and value are required'); return }
+    if (!userId) return
+    if (entries.some(e => e.key === newKey.trim())) { toast.error('Key already exists'); return }
+
     setSavingNew(true)
     const supabase = createClient()
-    const { data, error } = await supabase
-      .from('business_data')
-      .insert({ tenant_id: tenantId, key: newKey.trim(), value: newValue.trim() })
-      .select().single()
+
+    const currentKb: Record<string, string> = {}
+    entries.forEach(e => { currentKb[e.key] = e.value })
+    currentKb[newKey.trim()] = newValue.trim()
+
+    const { error } = await supabase
+      .from('tenants')
+      .update({ knowledge_base: currentKb })
+      .eq('id', userId)
+
     if (error) { toast.error('Failed to add entry') } else {
-      setEntries((prev) => [...prev, data])
+      setEntries(prev => [...prev, { key: newKey.trim(), value: newValue.trim() }])
       setNewKey(''); setNewValue(''); setAddingNew(false)
       toast.success('Knowledge added')
     }
@@ -181,10 +211,10 @@ export default function BusinessDataPage() {
                   </td>
                 </tr>
               ) : entries.map((entry) => (
-                <tr key={entry.id} className="group border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                <tr key={entry.key} className="group border-b border-gray-50 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-mono text-xs text-gray-600 align-top pt-4">{entry.key}</td>
                   <td className="px-4 py-3 align-top">
-                    {editingId === entry.id ? (
+                    {editingKey === entry.key ? (
                       <textarea value={editValue} onChange={(e) => setEditValue(e.target.value)} autoFocus rows={3}
                         onKeyDown={(e) => { if (e.key === 'Escape') cancelEdit() }}
                         className="w-full px-2.5 py-2 rounded-md border border-green-300 text-sm focus:outline-none focus:ring-1 focus:ring-green-600 resize-none" />
@@ -193,18 +223,18 @@ export default function BusinessDataPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right align-top pt-4">
-                    {editingId === entry.id ? (
+                    {editingKey === entry.key ? (
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => saveEdit(entry.id)} disabled={savingId === entry.id} className="p-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
-                          {savingId === entry.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                        <button onClick={() => saveEdit(entry.key)} disabled={savingKey === entry.key} className="p-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                          {savingKey === entry.key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                         </button>
                         <button onClick={cancelEdit} className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100"><X className="w-3.5 h-3.5" /></button>
                       </div>
                     ) : (
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => startEdit(entry)} className="p-1.5 rounded-md text-gray-400 hover:text-green-600 hover:bg-green-50"><Pencil className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => deleteEntry(entry.id)} disabled={deletingId === entry.id} className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50">
-                          {deletingId === entry.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        <button onClick={() => deleteEntry(entry.key)} disabled={deletingKey === entry.key} className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50">
+                          {deletingKey === entry.key ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                         </button>
                       </div>
                     )}

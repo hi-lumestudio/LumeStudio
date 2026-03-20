@@ -2,19 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Users, Download, Loader2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Search, Users, Download, Loader2, Bot, UserRound, Pencil, Check, X } from 'lucide-react'
 import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 interface CrmEntry {
   id: string
-  customer_phone: string
+  phone: string
+  name: string | null
   first_contact: string
   last_contact: string
-  total_messages: number
-  last_message: string
+  message_count: number
+  last_preview: string
   status: string
+  ai_enabled: boolean
 }
 
 function getStatusStyle(status: string) {
@@ -36,17 +38,18 @@ export default function CrmPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [editingNameId, setEditingNameId] = useState<string | null>(null)
+  const [editNameValue, setEditNameValue] = useState('')
 
   useEffect(() => {
     async function fetchData() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const tenantId = user.user_metadata?.tenant_id || 'default'
       const { data } = await supabase
-        .from('crm')
+        .from('customers')
         .select('*')
-        .eq('tenant_id', tenantId)
+        .eq('tenant_id', user.id)
         .order('last_contact', { ascending: false })
       setEntries(data || [])
       setLoading(false)
@@ -56,7 +59,7 @@ export default function CrmPage() {
 
   const uniqueStatuses = Array.from(new Set(entries.map((e) => e.status).filter(Boolean)))
   const filtered = entries.filter((e) => {
-    const matchesSearch = e.customer_phone?.toLowerCase().includes(search.toLowerCase())
+    const matchesSearch = (e.phone?.toLowerCase().includes(search.toLowerCase()) || e.name?.toLowerCase().includes(search.toLowerCase()))
     const matchesStatus = statusFilter === 'all' || e.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -69,14 +72,14 @@ export default function CrmPage() {
 
     // CSV Headers
     const headers = ['Phone', 'First Contact', 'Last Contact', 'Total Messages', 'Last Message', 'Status']
-    
+
     // Format rows
     const rows = filtered.map(e => [
-      e.customer_phone || '',
+      e.phone || '',
       e.first_contact ? new Date(e.first_contact).toISOString() : '',
       e.last_contact ? new Date(e.last_contact).toISOString() : '',
-      e.total_messages?.toString() || '0',
-      `"${(e.last_message || '').replace(/"/g, '""')}"`, // Escape quotes
+      e.message_count?.toString() || '0',
+      `"${(e.last_preview || '').replace(/"/g, '""')}"`, // Escape quotes
       e.status || ''
     ])
 
@@ -95,17 +98,17 @@ export default function CrmPage() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    
+
     toast.success('Successfully exported CRM data')
   }
 
   const toggleCustomerStatus = async (id: string, currentStatus: string) => {
     setUpdatingId(id)
     const newStatus = currentStatus.toLowerCase() === 'active' ? 'inactive' : 'active'
-    
+
     const supabase = createClient()
     const { error } = await supabase
-      .from('crm')
+      .from('customers')
       .update({ status: newStatus })
       .eq('id', id)
 
@@ -160,24 +163,25 @@ export default function CrmPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Pelanggan</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">First Contact</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden md:table-cell">Last Contact</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden lg:table-cell">Messages</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide hidden xl:table-cell">Last Message</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">AI</th>
               </tr>
             </thead>
             <tbody>
               {loading ? Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="border-b border-gray-50">
-                  {Array.from({ length: 6 }).map((_, j) => (
+                  {Array.from({ length: 7 }).map((_, j) => (
                     <td key={j} className="px-4 py-4"><div className="h-4 bg-gray-100 animate-pulse rounded w-24" /></td>
                   ))}
                 </tr>
               )) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
+                  <td colSpan={7} className="px-4 py-12 text-center">
                     <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                     <p className="text-sm text-gray-400">
                       {search || statusFilter !== 'all' ? 'No customers match your filters' : 'No customers yet'}
@@ -186,34 +190,103 @@ export default function CrmPage() {
                 </tr>
               ) : filtered.map((entry) => (
                 <tr key={entry.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3.5 font-medium text-gray-900">{entry.customer_phone}</td>
+                  <td className="px-4 py-3.5">
+                    {editingNameId === entry.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={editNameValue}
+                          onChange={(e) => setEditNameValue(e.target.value)}
+                          onKeyDown={async (e) => {
+                            if (e.key === 'Enter') {
+                              const supabase = createClient()
+                              const { error } = await supabase.from('customers').update({ name: editNameValue.trim() || null }).eq('id', entry.id)
+                              if (error) { toast.error('Gagal menyimpan nama'); return }
+                              setEntries(entries.map(x => x.id === entry.id ? { ...x, name: editNameValue.trim() || null } : x))
+                              toast.success('Nama pelanggan diperbarui')
+                              setEditingNameId(null)
+                            }
+                            if (e.key === 'Escape') setEditingNameId(null)
+                          }}
+                          autoFocus
+                          placeholder="Ketik nama..."
+                          className="h-7 w-32 px-2 rounded border border-green-300 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                        />
+                        <button
+                          onClick={async () => {
+                            const supabase = createClient()
+                            const { error } = await supabase.from('customers').update({ name: editNameValue.trim() || null }).eq('id', entry.id)
+                            if (error) { toast.error('Gagal menyimpan nama'); return }
+                            setEntries(entries.map(x => x.id === entry.id ? { ...x, name: editNameValue.trim() || null } : x))
+                            toast.success('Nama pelanggan diperbarui')
+                            setEditingNameId(null)
+                          }}
+                          className="p-1 rounded text-green-600 hover:bg-green-50"
+                        ><Check className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setEditingNameId(null)} className="p-1 rounded text-gray-400 hover:bg-gray-100">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 group">
+                        <div>
+                          <p className="font-medium text-gray-900">{entry.name || entry.phone}</p>
+                          {entry.name && <p className="text-xs text-gray-400">{entry.phone}</p>}
+                        </div>
+                        <button
+                          onClick={() => { setEditingNameId(entry.id); setEditNameValue(entry.name || '') }}
+                          className="p-1 rounded text-gray-300 opacity-0 group-hover:opacity-100 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                          title="Edit nama"
+                        ><Pencil className="w-3 h-3" /></button>
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3.5 text-gray-500 hidden sm:table-cell">{formatDate(entry.first_contact)}</td>
                   <td className="px-4 py-3.5 text-gray-500 hidden md:table-cell">{formatDate(entry.last_contact)}</td>
-                  <td className="px-4 py-3.5 text-gray-500 hidden lg:table-cell">{entry.total_messages || 0}</td>
+                  <td className="px-4 py-3.5 text-gray-500 hidden lg:table-cell">{entry.message_count || 0}</td>
                   <td className="px-4 py-3.5 text-gray-500 hidden xl:table-cell max-w-xs">
-                    <p className="truncate">{entry.last_message || '—'}</p>
+                    <p className="truncate">{entry.last_preview || '—'}</p>
                   </td>
                   <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${getStatusStyle(entry.status)}`}>
-                        {entry.status || '—'}
-                      </span>
-                      {updatingId === entry.id ? (
-                        <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
-                      ) : (
-                        <button
-                          onClick={() => toggleCustomerStatus(entry.id, entry.status || 'inactive')}
-                          className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
-                          title={`Toggle to ${(entry.status || 'inactive').toLowerCase() === 'active' ? 'inactive' : 'active'}`}
-                        >
-                          {(entry.status || 'inactive').toLowerCase() === 'active' ? (
-                            <ToggleRight className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <ToggleLeft className="w-5 h-5" />
-                          )}
-                        </button>
-                      )}
-                    </div>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${getStatusStyle(entry.status)}`}>
+                      {entry.status || '—'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    {updatingId === entry.id ? (
+                      <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          setUpdatingId(entry.id)
+                          const newValue = !(entry.ai_enabled ?? true)
+                          const supabase = createClient()
+                          const { error } = await supabase.from('customers').update({ ai_enabled: newValue }).eq('id', entry.id)
+                          if (error) { toast.error('Gagal mengubah status AI'); setUpdatingId(null); return }
+                          setEntries(entries.map(e => e.id === entry.id ? { ...e, ai_enabled: newValue } : e))
+                          toast.success(newValue ? 'AI diaktifkan' : 'AI dinonaktifkan — mode manual')
+                          setUpdatingId(null)
+                        }}
+                        className="flex items-center gap-1.5 group focus:outline-none"
+                        title={entry.ai_enabled !== false ? 'Klik untuk nonaktifkan AI' : 'Klik untuk aktifkan AI'}
+                      >
+                        {entry.ai_enabled !== false ? (
+                          <>
+                            <Bot className="w-4 h-4 text-green-600" />
+                            <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200 group-hover:bg-green-100 transition-colors">
+                              AI Aktif
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <UserRound className="w-4 h-4 text-orange-500" />
+                            <span className="text-xs font-medium text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200 group-hover:bg-orange-100 transition-colors">
+                              Manual
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Leaf, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
@@ -51,8 +51,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
-              <Leaf className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img src="/Lume_Studio_Logo.svg" alt="Lume Studio Logo" className="w-12 h-12" />
             </div>
             <span className="font-bold text-2xl text-gray-900">Lume Studio</span>
           </Link>

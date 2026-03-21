@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { User, KeyRound, Loader2, Check, CreditCard, X, Copy, Megaphone } from 'lucide-react'
+import { User, KeyRound, Loader2, Check, CreditCard, X, Copy, Megaphone, Upload, ImageIcon, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface UserInfo {
@@ -28,10 +28,30 @@ export default function SettingsPage() {
   // Payment Modal state
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
+  // Payment proof upload state
+  const [proofFile, setProofFile] = useState<File | null>(null)
+  const [proofAmount, setProofAmount] = useState('')
+  const [proofNotes, setProofNotes] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [proofHistory, setProofHistory] = useState<any[]>([])
+  const [loadingProofs, setLoadingProofs] = useState(false)
+
   // Watermark toggle state
   const [showWatermark, setShowWatermark] = useState(true)
   const [togglingWatermark, setTogglingWatermark] = useState(false)
   const [tenantPlan, setTenantPlan] = useState('starter')
+
+  const fetchProofHistory = async () => {
+    setLoadingProofs(true)
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('payment_proofs')
+      .select('id, image_url, amount, notes, status, admin_notes, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10)
+    setProofHistory(data || [])
+    setLoadingProofs(false)
+  }
 
   useEffect(() => {
     async function fetchUser() {
@@ -47,6 +67,7 @@ export default function SettingsPage() {
           .select('business_name, plan, ai_limit, subscription_end, status, show_watermark')
           .eq('id', user.id)
           .single()
+
 
         // Fetch current month usage from monthly_usage
         const currentMonth = new Date().toISOString().slice(0, 7) + '-01' // e.g. '2026-03-01'
@@ -69,12 +90,57 @@ export default function SettingsPage() {
         })
         setShowWatermark(tenant?.show_watermark !== false)
         setTenantPlan(tenant?.plan || 'starter')
+
+        // Fetch proof history
+        fetchProofHistory()
       }
       setLoading(false)
     }
 
     fetchUser()
   }, [])
+
+  const handleUploadProof = async () => {
+    if (!proofFile || !userInfo) return
+    setUploading(true)
+    const supabase = createClient()
+
+    // Upload image to Supabase Storage
+    const fileExt = proofFile.name.split('.').pop()
+    const fileName = `${userInfo.tenantId}/${Date.now()}.${fileExt}`
+
+    const { error: uploadErr } = await supabase.storage
+      .from('payment-proofs')
+      .upload(fileName, proofFile, { cacheControl: '3600', upsert: false })
+
+    if (uploadErr) {
+      toast.error('Gagal mengunggah gambar: ' + uploadErr.message)
+      setUploading(false)
+      return
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage.from('payment-proofs').getPublicUrl(fileName)
+
+    // Insert proof record
+    const { error: insertErr } = await supabase.from('payment_proofs').insert({
+      tenant_id: userInfo.tenantId,
+      image_url: urlData.publicUrl,
+      amount: proofAmount ? parseInt(proofAmount) : null,
+      notes: proofNotes || null,
+    })
+
+    if (insertErr) {
+      toast.error('Gagal menyimpan bukti: ' + insertErr.message)
+    } else {
+      toast.success('Bukti transfer berhasil dikirim! Menunggu verifikasi admin.')
+      setProofFile(null)
+      setProofAmount('')
+      setProofNotes('')
+      fetchProofHistory()
+    }
+    setUploading(false)
+  }
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -126,7 +192,6 @@ export default function SettingsPage() {
         <div className="px-6 py-5 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InfoField label="Email address" value={userInfo?.email || '—'} />
-            <InfoField label="Tenant ID" value={userInfo?.tenantId || '—'} mono />
             <InfoField label="Business Name" value={userInfo?.tenantName || '—'} />
             <InfoField
               label="Account created"
@@ -297,8 +362,8 @@ export default function SettingsPage() {
       {/* Payment Modal Overlay */}
       {isPaymentModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 flex-shrink-0">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-green-600" />
                 Transfer Pembayaran
@@ -311,7 +376,8 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            <div className="p-5 space-y-5">
+            <div className="p-5 space-y-5 overflow-y-auto">
+              {/* Bank Details */}
               <div className="text-center space-y-1">
                 <p className="text-sm text-gray-500">Silakan transfer nominal paket yang dipilih ke rekening BCA di bawah ini:</p>
               </div>
@@ -337,15 +403,131 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-green-50 rounded-lg p-3.5 text-[13px] text-green-800 border border-green-100">
-                <p>💡 Setelah mentransfer, ambil <b>screenshot bukti transfer</b> dan hubungi admin Lume Studio via WhatsApp untuk verifikasi kilat.</p>
+              {/* Upload Proof */}
+              <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+                <p className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                  <Upload className="w-4 h-4 text-green-600" />
+                  Upload Bukti Transfer
+                </p>
+
+                {/* File picker */}
+                <label className="block cursor-pointer">
+                  <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                    proofFile ? 'border-green-300 bg-green-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}>
+                    {proofFile ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <ImageIcon className="w-5 h-5 text-green-600" />
+                        <span className="text-sm text-green-700 font-medium">{proofFile.name}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); setProofFile(null) }}
+                          className="p-0.5 text-gray-400 hover:text-red-500"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <ImageIcon className="w-8 h-8 text-gray-300 mx-auto mb-1" />
+                        <p className="text-sm text-gray-500">Klik untuk pilih gambar</p>
+                        <p className="text-xs text-gray-400">JPG, PNG, WebP (maks 5MB)</p>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f && f.size > 5 * 1024 * 1024) {
+                        toast.error('Ukuran file maksimal 5MB')
+                        return
+                      }
+                      setProofFile(f || null)
+                    }}
+                  />
+                </label>
+
+                {/* Amount + notes */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Nominal (Rp)</label>
+                    <input
+                      type="number"
+                      value={proofAmount}
+                      onChange={e => setProofAmount(e.target.value)}
+                      placeholder="500000"
+                      className="w-full h-9 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Catatan</label>
+                    <input
+                      type="text"
+                      value={proofNotes}
+                      onChange={e => setProofNotes(e.target.value)}
+                      placeholder="Bln Maret"
+                      className="w-full h-9 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleUploadProof}
+                  disabled={!proofFile || uploading}
+                  className="w-full h-10 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {uploading ? 'Mengunggah...' : 'Kirim Bukti Transfer'}
+                </button>
               </div>
+
+              {/* Proof History */}
+              {proofHistory.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Riwayat Upload</p>
+                  {proofHistory.map((p: any) => (
+                    <div key={p.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <a href={p.image_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+                        <img src={p.image_url} alt="Bukti" className="w-12 h-12 rounded-md object-cover border border-gray-200" />
+                      </a>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800">
+                          {p.amount ? `Rp ${Number(p.amount).toLocaleString('id-ID')}` : 'Belum ada nominal'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {p.status === 'pending' && (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full">
+                            <Clock className="w-3 h-3" /> Menunggu
+                          </span>
+                        )}
+                        {p.status === 'approved' && (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full">
+                            <CheckCircle className="w-3 h-3" /> Disetujui
+                          </span>
+                        )}
+                        {p.status === 'rejected' && (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 bg-red-100 px-2 py-1 rounded-full">
+                            <XCircle className="w-3 h-3" /> Ditolak
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <button
                 onClick={() => setIsPaymentModalOpen(false)}
                 className="w-full h-10 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
               >
-                Selesai / Tutup
+                Tutup
               </button>
             </div>
           </div>

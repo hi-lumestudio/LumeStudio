@@ -23,19 +23,33 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Use getUser() instead of getSession() — getSession() doesn't reliably
-  // read cookies and is deprecated for auth verification in middleware
   const { data: { user } } = await supabase.auth.getUser()
+  const pathname = request.nextUrl.pathname
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isDashboardRoute = pathname.startsWith('/dashboard')
+  const isLoginRoute = pathname === '/login'
 
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  // Not authenticated → redirect to login (for protected routes)
+  if (!user && (isAdminRoute || isDashboardRoute)) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && request.nextUrl.pathname === '/login') {
+  // Authenticated but accessing /admin without admin role → redirect to /dashboard
+  if (user && isAdminRoute) {
+    const isAdmin = user.user_metadata?.role === 'admin'
+    if (!isAdmin) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Authenticated user on /login → redirect appropriately
+  if (user && isLoginRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = user.user_metadata?.role === 'admin' ? '/admin' : '/dashboard'
     return NextResponse.redirect(url)
   }
 

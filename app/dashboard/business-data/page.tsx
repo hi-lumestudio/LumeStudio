@@ -46,38 +46,38 @@ export default function BusinessDataPage() {
   useEffect(() => {
     async function fetchData() {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        setLoading(false)
+        return
+      }
       setUserId(user.id)
 
-      const { data: tenant } = await supabase
-        .from('tenants')
-        .select('knowledge_base')
-        .eq('id', user.id)
-        .single()
-
-      const kb = tenant?.knowledge_base || {}
-
-      // If tenant has no knowledge base yet, seed with default keys
-      if (Object.keys(kb).length === 0) {
-        const defaultKb: Record<string, string> = {}
-        DEFAULT_KEYS.forEach(key => { defaultKb[key] = '' })
-
-        await supabase
+      try {
+        const { data: tenant, error: fetchError } = await supabase
           .from('tenants')
-          .update({ knowledge_base: defaultKb })
+          .select('knowledge_base')
           .eq('id', user.id)
+          .single()
 
-        setEntries(Object.entries(defaultKb).map(([key, value]) => ({ key, value })))
-      } else {
-        setEntries(Object.entries(kb).map(([key, value]) => ({ key, value: value as string })))
+        if (fetchError) throw fetchError
+
+        // Ensure kb is a valid object before mapping
+        const kb = tenant?.knowledge_base
+        if (kb && typeof kb === 'object' && !Array.isArray(kb)) {
+          setEntries(Object.entries(kb).map(([key, value]) => ({ key, value: String(value || '') })))
+        } else {
+          setEntries([])
+        }
+      } catch (err) {
+        console.error('Error fetching knowledge base:', err)
+        toast.error('Gagal memuat data bisnis. Silakan refresh.')
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
     fetchData()
   }, [])
-
   const startEdit = (entry: DataEntry) => { setEditingKey(entry.key); setEditValue(entry.value) }
   const cancelEdit = () => { setEditingKey(null); setEditValue('') }
 
@@ -206,8 +206,8 @@ export default function BusinessDataPage() {
                 <tr>
                   <td colSpan={3} className="px-4 py-12 text-center">
                     <Database className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">No knowledge entries yet</p>
-                    <p className="text-xs text-gray-400 mt-1">Click &quot;Add entry&quot; to add business information for the AI</p>
+                    <p className="text-sm text-gray-400">Belum ada data bisnis</p>
+                    <p className="text-xs text-gray-400 mt-1">Klik &quot;Add entry&quot; untuk menambahkan info bisnis yang akan dipelajari oleh AI</p>
                   </td>
                 </tr>
               ) : entries.map((entry) => (

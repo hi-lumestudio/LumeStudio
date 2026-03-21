@@ -29,7 +29,7 @@ export async function createNewClient(formData: {
   const supabase = createAdminClient()
 
   const aiLimit = formData.plan === 'pro' ? 20000 : 7500
-  const showWatermark = formData.plan !== 'pro'
+  const showWatermark = false
 
   // 1. Create Supabase Auth user
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({

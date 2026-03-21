@@ -103,7 +103,7 @@ const plans = [
       'Laporan Performa Bulanan',
       'Custom AI Personality',
       'Support via WhatsApp',
-      'Watermark "Powered by lumestudio.my.id"',
+      'Tanpa watermark — pesan AI tanpa branding',
     ],
     featured: false,
     cta: 'Mulai Sekarang',

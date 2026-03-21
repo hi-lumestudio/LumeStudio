@@ -259,15 +259,10 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900 mb-1">Watermark &quot;Powered by lumestudio.my.id&quot;</p>
-              {tenantPlan === 'pro' ? (
-                <p className="text-xs text-gray-500">Tampilkan atau sembunyikan watermark di setiap pesan AI.</p>
-              ) : (
-                <p className="text-xs text-gray-500">Setiap pesan AI akan menampilkan &quot;Powered by lumestudio.my.id&quot;. Upgrade ke Pro untuk menghilangkan watermark.</p>
-              )}
+              <p className="text-xs text-gray-500">Tampilkan atau sembunyikan watermark di setiap pesan AI.</p>
             </div>
             <button
               onClick={async () => {
-                if (tenantPlan !== 'pro') return
                 setTogglingWatermark(true)
                 const newVal = !showWatermark
                 const supabase = createClient()
@@ -277,8 +272,8 @@ export default function SettingsPage() {
                 toast.success(newVal ? 'Watermark diaktifkan' : 'Watermark dinonaktifkan')
                 setTogglingWatermark(false)
               }}
-              disabled={tenantPlan !== 'pro' || togglingWatermark}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${tenantPlan !== 'pro' ? 'bg-green-500 opacity-50 cursor-not-allowed' :
+              disabled={togglingWatermark}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                   showWatermark ? 'bg-green-500 cursor-pointer' : 'bg-gray-300 cursor-pointer'
                 }`}
             >
@@ -286,15 +281,6 @@ export default function SettingsPage() {
                 }`} />
             </button>
           </div>
-          {tenantPlan !== 'pro' && (
-            <button
-              onClick={() => setIsPaymentModalOpen(true)}
-              className="mt-4 inline-flex items-center gap-2 h-9 px-4 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-            >
-              <CreditCard className="w-4 h-4" />
-              Upgrade ke Pro
-            </button>
-          )}
         </div>
       </div>
 

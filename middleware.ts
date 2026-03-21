@@ -46,10 +46,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Authenticated user on /login → redirect appropriately
+  // Authenticated user on /login → redirect to dashboard
   if (user && isLoginRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = user.user_metadata?.role === 'admin' ? '/admin' : '/dashboard'
+    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 

@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Verify admin
   const authClient = createClient()
@@ -14,7 +14,7 @@ export async function GET(
   }
 
   const supabase = createAdminClient()
-  const tenantId = params.id
+  const tenantId = (await params).id
 
   // Get tenant name
   const { data: tenant } = await supabase

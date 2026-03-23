@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import DashboardShowcase from '@/components/dashboard-showcase'
 import {
   MessageSquare,
   Users,
@@ -397,6 +398,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Dashboard Showcase ─── */}
+      <DashboardShowcase />
 
       {/* ─── Who It's For ─── */}
       <section className="py-24 bg-white">

@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'sonner'
 import Image from 'next/image'
-
+import { Analytics } from "@vercel/analytics/next"
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
@@ -25,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <span className="font-bold text-lg text-gray-900 tracking-tight">Lume Studio</span>
         </header>
         {children}
+        <Analytics />
         <Toaster position="top-right" richColors />
       </body>
     </html>

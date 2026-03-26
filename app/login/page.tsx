@@ -114,9 +114,24 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-sm text-gray-400 mt-5">
-          Contact your administrator to get an account.
-        </p>
+        <div className="mt-8 text-center sm:mt-10">
+          <p className="text-sm text-gray-500 mb-4">
+            Butuh bantuan? Hubungi administrator Anda untuk mendapatkan akses.
+          </p>
+          <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
+            <Link href="/" className="hover:text-gray-600 transition-colors">
+              Kembali ke Beranda
+            </Link>
+            <span>•</span>
+            <Link href="#" className="hover:text-gray-600 transition-colors">
+              Kebijakan Privasi
+            </Link>
+            <span>•</span>
+            <Link href="#" className="hover:text-gray-600 transition-colors">
+              Syarat & Ketentuan
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/dashboard/', '/admin/', '/api/', '/login'],
       },
     ],
-    sitemap: 'https://lumestudio.id/sitemap.xml',
-    host: 'https://lumestudio.id',
+    sitemap: 'https://lumestudio.my.id/sitemap.xml',
+    host: 'https://lumestudio.my.id',
   }
 }

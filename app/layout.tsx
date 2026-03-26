@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Analytics } from "@vercel/analytics/next"
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
-const siteUrl = 'https://lumestudio.id'
+const siteUrl = 'https://lumestudio.my.id'
 
 export const metadata: Metadata = {
   title: {

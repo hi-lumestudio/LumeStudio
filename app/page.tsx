@@ -192,7 +192,7 @@ export default function LandingPage() {
         operatingSystem: 'Web',
         description:
           'Lume Studio adalah platform chatbot WhatsApp AI untuk bisnis Indonesia. Otomasi auto-reply, CRM pelanggan, manajemen pesanan, dan analitik dalam satu dashboard.',
-        url: 'https://lumestudio.id',
+        url: 'https://lumestudio.my.id',
         inLanguage: 'id',
         offers: [
           {
@@ -213,7 +213,7 @@ export default function LandingPage() {
         provider: {
           '@type': 'Organization',
           name: 'Lume Studio',
-          url: 'https://lumestudio.id',
+          url: 'https://lumestudio.my.id',
           contactPoint: {
             '@type': 'ContactPoint',
             contactType: 'sales',

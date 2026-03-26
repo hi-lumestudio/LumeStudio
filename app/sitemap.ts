@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const siteUrl = 'https://lumestudio.id'
+const siteUrl = 'https://lumestudio.my.id'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

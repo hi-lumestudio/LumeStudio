@@ -182,7 +182,100 @@ const chatMessages = [
 ]
 
 export default function LandingPage() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'SoftwareApplication',
+        name: 'Lume Studio',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        description:
+          'Lume Studio adalah platform chatbot WhatsApp AI untuk bisnis Indonesia. Otomasi auto-reply, CRM pelanggan, manajemen pesanan, dan analitik dalam satu dashboard.',
+        url: 'https://lumestudio.id',
+        inLanguage: 'id',
+        offers: [
+          {
+            '@type': 'Offer',
+            name: 'Starter',
+            price: '600000',
+            priceCurrency: 'IDR',
+            billingIncrement: 'P1M',
+          },
+          {
+            '@type': 'Offer',
+            name: 'Pro',
+            price: '1200000',
+            priceCurrency: 'IDR',
+            billingIncrement: 'P1M',
+          },
+        ],
+        provider: {
+          '@type': 'Organization',
+          name: 'Lume Studio',
+          url: 'https://lumestudio.id',
+          contactPoint: {
+            '@type': 'ContactPoint',
+            contactType: 'sales',
+            availableLanguage: ['Indonesian', 'Bahasa Indonesia'],
+          },
+          areaServed: 'ID',
+        },
+        featureList: [
+          'AI Auto-Reply WhatsApp 24/7',
+          'CRM Pelanggan Otomatis',
+          'Manajemen Pesanan WhatsApp',
+          'Analitik Percakapan',
+          'Custom AI Personality',
+          'Dashboard Multi-Tenant',
+        ],
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'Apakah Lume Studio langsung jadi tanpa setup?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Tidak. Setup dilakukan bersama agar sesuai kebutuhan bisnis Anda. Kami bantu dari awal sampai siap pakai melalui WhatsApp atau tatap muka.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Apakah chatbot WhatsApp Lume Studio bisa custom untuk bisnis saya?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Bisa. Alur chat, jenis pertanyaan, format order, sampai gaya jawaban AI bisa disesuaikan dengan bisnis Anda.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Berapa harga chatbot WhatsApp AI Lume Studio?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Lume Studio tersedia mulai Rp 600.000/bulan untuk paket Starter (7.500 AI responses) dan Rp 1.200.000/bulan untuk paket Pro (20.000 AI responses).',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Apakah data bisnis saya aman di Lume Studio?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Data disimpan di Supabase dan akses dashboard membutuhkan login. Kami juga menggunakan RLS untuk membatasi akses data per tenant.',
+            },
+          },
+        ],
+      },
+    ],
+  }
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <div className="min-h-screen bg-white font-[family-name:var(--font-inter)] antialiased">
 
       {/* ─── Nav ─── */}
@@ -606,5 +699,6 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+    </>
   )
 }

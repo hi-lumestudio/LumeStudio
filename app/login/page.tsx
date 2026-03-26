@@ -123,11 +123,11 @@ export default function LoginPage() {
               Kembali ke Beranda
             </Link>
             <span>•</span>
-            <Link href="#" className="hover:text-gray-600 transition-colors">
+            <Link href="/kebijakan-privasi" className="hover:text-gray-600 transition-colors">
               Kebijakan Privasi
             </Link>
             <span>•</span>
-            <Link href="#" className="hover:text-gray-600 transition-colors">
+            <Link href="/syarat-ketentuan" className="hover:text-gray-600 transition-colors">
               Syarat & Ketentuan
             </Link>
           </div>

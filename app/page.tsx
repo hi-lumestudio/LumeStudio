@@ -693,8 +693,8 @@ export default function LandingPage() {
           </div>
           <p className="text-xs">© {new Date().getFullYear()} Lume Studio. Hak cipta dilindungi.</p>
           <div className="flex gap-6 text-xs">
-            <a href="#" className="hover:text-gray-400 transition-colors">Kebijakan Privasi</a>
-            <a href="#" className="hover:text-gray-400 transition-colors">Syarat & Ketentuan</a>
+            <a href="/kebijakan-privasi" className="hover:text-gray-400 transition-colors">Kebijakan Privasi</a>
+            <a href="/syarat-ketentuan" className="hover:text-gray-400 transition-colors">Syarat & Ketentuan</a>
           </div>
         </div>
       </footer>
